@@ -36,6 +36,7 @@ class LazyPanelizerArrayObject extends ArrayObject {
   private $entity = NULL;
   private $entityType = NULL;
   private $entityId = NULL;
+  public $did = NULL;
   private $panelizer = NULL;
 
   public function setEntity($entity, $entity_type, $entity_id) {
