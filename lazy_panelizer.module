@@ -7,15 +7,29 @@ function lazy_panelizer_entity_load(&$entities, $entity_type) {
   $handler = panelizer_entity_plugin_get_handler($entity_type);
   if ($handler) {
     foreach ($entities as $entity_id => $entity) {
-      list(, , $bundle) = entity_extract_ids($entity_type, $entity);
+      list(, $revision_id, $bundle) = entity_extract_ids($entity_type, $entity);
       if ($handler->is_panelized($bundle)) {
         $entity->panelizer = new LazyPanelizerArrayObject();
-        $entity->panelizer->setEntity($entity, $entity_type, $entity_id);
+        $entity->panelizer->setEntity($entity, $entity_type, $entity_id, $revision_id);
       }
       else {
         $entity->panelizer = array();
       }
     }
+  }
+}
+
+/**
+ * Implements hook_entity_presave()
+ * When saving an entity make sure we use the default panelizer object
+ */
+function lazy_panelizer_entity_presave($entity, $entity_type) {
+  $handler = panelizer_entity_plugin_get_handler($entity_type);
+  if ($handler) {
+    unset($entity->panelizer);
+    list($entity_id, $revision_id, $bundle) = entity_extract_ids($entity_type, $entity);
+    $entities = array($entity_id => $entity);
+    panelizer_entity_load($entities, $entity_type);
   }
 }
 
@@ -37,12 +51,14 @@ class LazyPanelizerArrayObject extends ArrayObject {
   private $entityType = NULL;
   private $entityId = NULL;
   public $did = NULL;
+  public $revision_id = NULL;
   private $panelizer = NULL;
 
-  public function setEntity($entity, $entity_type, $entity_id) {
+  public function setEntity($entity, $entity_type, $entity_id, $revision_id) {
     $this->entity = $entity;
     $this->entityType = $entity_type;
     $this->entityId = $entity_id;
+    $this->revision_id = $revision_id;
   }
 
   private function &getPanelizer() {
