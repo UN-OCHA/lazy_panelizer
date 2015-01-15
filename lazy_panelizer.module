@@ -24,7 +24,7 @@ function lazy_panelizer_entity_load(&$entities, $entity_type) {
  * When saving an entity make sure we use the default panelizer object
  */
 function lazy_panelizer_entity_presave($entity, $entity_type) {
-  if (isset($entity->revision)) {
+  if ($entity_type == 'node' && isset($entity->revision)) {
     $handler = panelizer_entity_plugin_get_handler($entity_type);
     if ($handler) {
       unset($entity->panelizer);
@@ -32,6 +32,12 @@ function lazy_panelizer_entity_presave($entity, $entity_type) {
       $entities = array($entity_id => $entity);
       panelizer_entity_load($entities, $entity_type);
     }
+  }
+  elseif ($entity_type == 'user') {
+    unset($entity->panelizer);
+    list($entity_id, $revision_id, $bundle) = entity_extract_ids($entity_type, $entity);
+    $entities = array($entity_id => $entity);
+    panelizer_entity_load($entities, $entity_type);
   }
 }
 
